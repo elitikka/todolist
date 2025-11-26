@@ -1,13 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect } from 'react'; 
-import { View, Text, StyleSheet, TextInput, Button } from 'react-native'; 
+import { View, Text, StyleSheet, Button } from 'react-native'; 
 import { SwipeListView } from 'react-native-swipe-list-view'; 
 import AddItem from './components/AddItem';
-interface Item { 
-id: string; 
-name: string; 
-done: boolean;
-} 
+import Toggle from './components/Toggle';
+import type { Item } from './types/types';
+
 
 const STORAGE_KEY = 'TODO_LIST_ITEMS'; 
 
@@ -32,6 +30,14 @@ useEffect(() => {
 }, [items]); 
 
 
+const toggleItem = (id: string) => {
+  setItems(prev =>
+    prev.map(item =>
+      item.id === id ? { ...item, done: !item.done } : item
+    )
+  );
+};
+
 return ( 
 <View style={styles.container}> 
   <Text style={styles.title}>Todo List</Text> 
@@ -43,31 +49,30 @@ return (
     ]);
   }} />
 
-  <SwipeListView 
-    data={items}
-    keyExtractor={item => item.id} 
-    renderItem={({ item }) => ( 
-      <View style={styles.rowFront}> 
-        <Text>{item.name}</Text> 
-      </View> 
-    )} 
-    renderHiddenItem={({ item }) => ( 
-      <View style={styles.rowBack}> 
-        <Button 
-          title="Delete" 
-          color="#d11a2a" 
-          onPress={() => { 
-            setItems(prev => prev.filter(i => i.id !== item.id)); 
-          }} 
-        /> 
-      </View> 
-    )} 
-    rightOpenValue={-75} 
-    disableRightSwipe 
-    /> 
-    </View> 
-  ); 
-}; 
+
+  <SwipeListView
+     data={items}
+     keyExtractor={(item) => item.id}
+     renderItem={({ item }) => (
+       <Toggle item={item} onToggle={toggleItem} />
+     )}
+     renderHiddenItem={({ item }) => (
+       <View style={styles.rowBack}>
+         <Button
+           title="Delete"
+           color="#d11a2a"
+           onPress={() =>
+             setItems(prev => prev.filter(i => i.id !== item.id))
+           }
+         />
+       </View>
+     )}
+     rightOpenValue={-75}
+     disableRightSwipe
+    />
+  </View>
+ );
+}
  
 const styles = StyleSheet.create({ 
   container: { 
@@ -108,5 +113,3 @@ const styles = StyleSheet.create({
     marginRight: 8, 
   },  
 }); 
- 
-//export default App; 
