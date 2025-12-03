@@ -1,69 +1,32 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useState, useEffect } from 'react'; 
+import React from 'react'; 
 import { View, Text, StyleSheet, Button } from 'react-native'; 
 import { SwipeListView } from 'react-native-swipe-list-view'; 
 import AddItem from './components/AddItem';
 import Toggle from './components/Toggle';
 import type { Item } from './types/types';
+import { useTodos } from './hooks/useTodos';
 
-
-const STORAGE_KEY = 'TODO_LIST_ITEMS'; 
-
-export default function App () { 
-const [items, setItems] = useState<Item[]>([]); 
-
-// Load items from AsyncStorage on mount 
-useEffect(() => { 
-  (async () => { 
-    try { 
-      const json = await AsyncStorage.getItem(STORAGE_KEY); 
-      if (json) setItems(JSON.parse(json)); 
-    } catch (e) { 
-      // handle error 
-    } 
-  })(); 
-}, []);
-
-// Save items to AsyncStorage whenever items change 
-useEffect(() => { 
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)); 
-}, [items]); 
-
-
-const toggleItem = (id: string) => {
-  setItems(prev =>
-    prev.map(item =>
-      item.id === id ? { ...item, done: !item.done } : item
-    )
-  );
-};
+export default function App() {
+  const { todos, addTodo, toggleTodo, removeTodo } = useTodos([]);
 
 return ( 
 <View style={styles.container}> 
   <Text style={styles.title}>Todo List</Text> 
 
-  <AddItem onAdd={(name) => {
-    setItems(prev => [
-      ...prev,
-      { id: Date.now().toString(), name, done: false },
-    ]);
-  }} />
-
+  <AddItem onAdd={addTodo}/>
 
   <SwipeListView
-     data={items}
-     keyExtractor={(item) => item.id}
+     data={todos}
+     keyExtractor={(item: Item) => item.id}
      renderItem={({ item }) => (
-       <Toggle item={item} onToggle={toggleItem} />
+       <Toggle item={item} onToggle={toggleTodo} />
      )}
      renderHiddenItem={({ item }) => (
        <View style={styles.rowBack}>
          <Button
            title="Delete"
            color="#d11a2a"
-           onPress={() =>
-             setItems(prev => prev.filter(i => i.id !== item.id))
-           }
+           onPress={() => removeTodo(item.id)}
          />
        </View>
      )}
